@@ -1,0 +1,22 @@
+# depslib dependency file v1.0
+1544518298 source:c:\users\dicky\downloads\compressed\ticket-master\main.cpp
+	<iostream>
+	<stdlib.h>
+	<stdio.h>
+	"style.h"
+
+1544518298 
+
+1544516922 c:\users\dicky\downloads\compressed\ticket-master\style.h
+
+1545266936 source:/home/didik/ticket/main.cpp
+	<iostream>
+	<stdlib.h>
+	<stdio.h>
+	"style.h"
+	"menu.h"
+
+1545266241 /home/didik/ticket/style.h
+
+1545266890 /home/didik/ticket/menu.h
+
