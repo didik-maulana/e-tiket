@@ -33,10 +33,17 @@ void line2(int a) {
 }
 
 void header(string a) {
-    line1(70);
-    cout <<"|               E-Tiket                 |\n";
-    line1(70);
-    cout << a << endl;
+    line2(70);
+    cout <<"||                              E-Tiket                             ||\n";
+    cout <<"||                            version 1.0                           ||\n";
+    line2(70);
+    cout << "  > " << a << endl;
     line1(70);
     endln(1);
+}
+
+void tab(int a) {
+    for(int i=0; i<a; i++) {
+        cout <<"\t";
+    }
 }

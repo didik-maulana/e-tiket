@@ -5,11 +5,16 @@
 #include "style.h"
 #include "menu.h"
 
+
 using namespace std;
 
 string username, pwd, re_pwd, msg;
 int blc=0, topup;
 string mn, mn_pay;
+
+// random
+char c;
+int r;
 
 // flight
 char kode, kelas;
@@ -65,6 +70,26 @@ int eksekutif_pw[4] =
     15000000
 };
 
+char randomChar() {
+    int num=1;
+    for (int i=0; i<num; i++)
+    {
+        r = rand() % 26;
+        c = 'A' + r;
+        return c;
+    }
+}
+
+int randomInt() {
+    int n;
+    n=1+(rand()%(400));
+    return n;
+}
+
+void randomTiket() {
+    cout << "TKT-" << randomChar() << "-" << randomInt();
+}
+
 void clear() {
 	msg="";
 	system("clear");
@@ -72,74 +97,105 @@ void clear() {
 
 void msgAlert(string txt) {
     clear();
-    msg=txt;
+    string color = "\033[1;31m";
+    string normal = "\033[0m";
+    msg=color+txt+normal;
+}
+
+void msgSuccess(string txt) {
+    clear();
+    string color = "\033[1;32m";
+    string normal = "\033[0m";
+    msg=color+txt+normal;
 }
 
 void msgMenuFalse() {
-    msgAlert("|X| Pilihan menu tidak tersedia");
+    msgAlert("\t|X| Pilihan menu tidak tersedia");
 }
 
 void msgPayment() {
-    msgAlert("|X| Saldo e-pay tidak cukup, silahkan isi dulu!");
+    string txt="\t|X| Saldo tidak cukup, silahkan isi ulang dulu!";
+    string color = "\033[1;31m";
+    string normal = "\033[0m";
+    msg=color+txt+normal;
+    out(msg);
 }
 
 void msgPwd() {
     pwd=re_pwd;
-    msgAlert("|X| Password salah, coba lagi");
+    msgAlert("\t|X| Password salah, coba lagi");
 }
 
 int main()
 {
+    srand (time(NULL));
+    home:
+    header("Halaman Home");
+    out("\tPesan tiket semudah klik, kapanpun dan dimanapun!");
+    out("\t-------------------------------------------------");
+    endln(1);
+    menuHome();
+    out(msg);
+    input("\tPilih menu : ");
+    cin >> mn;
+    if(mn=="1") {
+        clear();
+        goto signup;
+    } else if(mn=="2") {
+        clear();
+        exit(0);
+    } else {
+        msgMenuFalse();
+        goto home;
+    }
+
     // Halaman signup
     signup:
-    header("Halaman Signup");
-    out("Ayo daftar akun dulu . .");
+    header("\tHalaman Signup");
+    out("\tAyo daftar akun dulu . .");
+    tab(1);
+    line1(50);
     out(msg);
-    input("Username : ");
-    cin >> username;
-    input("Password : ");
-    cin >> pwd;
-    input("Confirm Password : ");
-    cin >> re_pwd;
-
+    input("\t  > Username : "); cin >> username;
+    input("\t  > Password : "); cin >> pwd;
+    input("\t  > Confirm Password : "); cin >> re_pwd;
     // auth and signup
     if(pwd==re_pwd) {
         clear();
-        goto home;
+        goto dashboard;
     } else {
-        msgAlert("|X| Uppss, password tidak valid!");
+        msgAlert("\t  |X| Uppss, password tidak valid!");
         goto signup;
     }
 
-    // Halaman home
-    home:
+    // Halaman dashboard
+    dashboard:
     header("Halaman Dashboard");
-    cout << "Selamat Datang " << username;
-
-    menuHome();
+    cout << "\tSelamat Datang " << username;
+    menuDashboard();
     out(msg);
-    input("Pilih menu : ");
+    input("\tPilih menu : ");
     cin >> mn;
-
     if(mn=="1") {
         clear();
         goto flight;
     } else if(mn=="5") {
         clear();
         goto epay;
+    } else if(mn=="6") {
+        clear();
     } else if(mn=="7") {
         clear();
-        goto signup;
+        goto home;
     } else {
         msgMenuFalse();
-        goto home;
+        goto dashboard;
     }
 
     // Halaman flight
     flight:
     header("Halaman Tiket Pesawat");
     endln(1);
-
     line2(70);
     out("                       DAFTAR PENERBANGAN           ");
     line2(70);
@@ -157,18 +213,17 @@ int main()
     }
     line2(70);
     endln(1);
-    out("Daftar Menu :");
-    out("[1] Pesan tiket");
-    out("[2] Kembali");
+    out("\tDaftar Menu :");
+    out("\t[1] Pesan tiket");
+    out("\t[2] Kembali");
     out(msg);
-    input("Pilih Menu : ");
+    input("\tPilih Menu : ");
     cin >> mn;
 
     if(mn=="1") {
-        input("Pilih tujuan (1/2/3/4) : ");
+        input("\t> Pilih tujuan (1/2/3/4) : ");
         cin >> tj_pw;
         pw=tj_pw-1;
-
         endln(1);
         cout << "Penerbangan : " << tujuan_pw[pw];
         endln(1);
@@ -186,8 +241,7 @@ int main()
         }
         line2(70);
         endln(1);
-
-        input("Pilih kelas pesawat (E/B/X) : ");
+        input("\t> Pilih kelas pesawat (E/B/X) : ");
         cin >> kls_pw;
         if(kls_pw=="E" || kls_pw=="e") {
             kls_pw="Ekonomi (E)";
@@ -199,81 +253,110 @@ int main()
             kls_pw="Eksekutif (X)";
             harga_tkt = eksekutif_pw[pw];
         }
-        input("Input jumlah penumpang : ");
+        input("\t> Input jumlah penumpang : ");
         cin >> jml_pw;
         bayar_pw = jml_pw*harga_tkt;
         string nama_pw[jml_pw];
         int nm_pw_size = (sizeof(nama_pw)/sizeof(*nama_pw));
-
         for(int i=0; i<jml_pw; i++) {
-            cout << "Nama penumpang ke-" << i+1 << " : ";
+            cout << "\t  " << i+1 <<". Nama penumpang : ";
             cin >> nama_pw[i];
         }
-
         clear();
         goto paymentPw;
 
         paymentPw:
         header("Halaman Pembayaran Tiket Pesawat");
-        cout << "Saldo E-Pay Anda : Rp. " << blc;
+        cout << "\tTotal pembayaran : Rp. " << bayar_pw;
+        endln(1);
+        cout << "\tSaldo E-Pay Anda : Rp. " << blc;
         endln(2);
         menuPayment();
         out(msg);
-        input("Pilih metode pembayaran : ");
+        input("\tPilih metode pembayaran : ");
         cin >> mn_pay;
-
         if(mn_pay=="1") {
             if(blc>bayar_pw) {
-                input("Masukan password Anda : ");
+                clear();
+                goto orderPw;
+            } else {
+                msgPayment();
+                input("\t> Jumlah topup saldo : Rp.");
+                cin >> topup;
+                input("\t> Masukan password Anda : ");
                 cin >> pwd;
-                if(pwd==re_pwd)
-                {
-                    out("Berhasil");
-                    clear();
-                } else
-                {
+                if(pwd==re_pwd) {
+                    blc += topup;
+                    msgSuccess("\t|*| Topup saldo berhasil");
+                    goto paymentPw;
+                } else {
                     msgPwd();
                     goto paymentPw;
                 }
-            } else {
-                msgPayment();
-                goto paymentPw;
             }
         } else if(mn_pay=="2") {
 
+        } else {
+            msgMenuFalse();
+            goto paymentPw;
         }
 
+        // Detail pemesanan pesawat
+        orderPw:
+        header("Halaman Tiket Penerbangan");
+        endln(1);
+
+        line2(70);
+        tab(3);
+        out("TIKET PENERBANGAN");
+        line2(70);
+        cout << "  No. Tiket      : "; randomTiket();
+        endln(1);
+        line1(70);
+        cout << "  Penerbangan    : " << tujuan_pw[pw];
+        endln(1);
+        cout << "  Kelas          : " << kls_pw;
+        endln(1);
+        cout << "  Gerbang        : " << randomChar() << randomInt();
+        endln(1);
+        cout << "  Tanggal        : " << tgl_pw[pw];
+        endln(1);
+        cout << "  Waktu          : " << jam_pw[pw];
+        endln(1);
+        line1(70);
+        out("  Nama penumpang :");
+        for(int i=0; i<nm_pw_size; i++) {
+            cout << "   " << i+1 << ". " << nama_pw[i]
+            << "  (" << randomInt() << "-" << randomChar() << ")";
+            endln(1);
+        }
+        line1(70);
     } else if(mn=="2") {
         clear();
-        goto home;
+        goto dashboard;
     } else {
         msgMenuFalse();
         goto flight;
     }
 
-    endln(2);
-    input("Test");
-    cin >> mn;
-
     // Halaman epay
     epay:
     header("Halaman E-Pay");
-    cout << "Saldo Anda : Rp." << blc;
+    cout << "\tSaldo Anda : Rp." << blc;
 
     menuEpay();
     out(msg);
-    input("Pilih menu :");
+    input("\tPilih menu : ");
     cin >> mn;
 
     if(mn == "1") {
-        input("Jumlah topup saldo : Rp.");
+        input("\tJumlah topup saldo : Rp.");
         cin >> topup;
-        input("Masukan password Anda : ");
+        input("\tMasukan password Anda : ");
         cin >> pwd;
         if(pwd==re_pwd) {
             blc += topup;
-            msg = "Topup saldo berhasil";
-            clear();
+            msgSuccess("\t|*| Topup saldo berhasil");
             goto epay;
         } else {
             msgPwd();
@@ -281,9 +364,9 @@ int main()
         }
     } else if(mn=="2") {
         clear();
-        goto home;
+        goto dashboard;
     } else {
-        clear();
+        msgMenuFalse();
         goto epay;
     }
 
