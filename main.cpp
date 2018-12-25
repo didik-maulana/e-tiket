@@ -10,7 +10,7 @@ using namespace std;
 
 string username, pwd, re_pwd, msg;
 int blc=0, topup;
-string mn, mn_pay;
+string mn, mn_pay, ct;
 
 // random
 char c;
@@ -295,17 +295,33 @@ int main()
                 }
             }
         } else if(mn_pay=="2") {
-
+            endln(1);
+            out("\tSilahkkan transfer pada salah satu virtual account");
+            out("\t*) verifikasi otomatis setelah transfer dilakukan");
+            endln(1);
+            input("\t  > Bank BCA     : 891083863658915"); endln(1);
+            input("\t  > Bank Mandiri : 892056982116894"); endln(1);
+            input("\t  > Bank BRI     : 893065854224012"); endln(1);
+            input("\t  Lanjutkan pembayaran ? (Y/T) : ");
+            cin >> ct;
+            if(ct=="Y"||ct=="y") {
+                clear();
+                goto orderPw;
+            } else if(ct=="T"||ct=="t") {
+                clear();
+                goto paymentPw;
+            } else {
+                msgMenuFalse();
+                goto paymentPw;
+            }
         } else {
             msgMenuFalse();
             goto paymentPw;
         }
-
         // Detail pemesanan pesawat
         orderPw:
         header("Halaman Tiket Penerbangan");
         endln(1);
-
         line2(70);
         tab(3);
         out("TIKET PENERBANGAN");
@@ -331,6 +347,20 @@ int main()
             endln(1);
         }
         line1(70);
+        endln(1);
+        out(msg);
+        input("\t> Pesan tiket pesawat lagi ? (Y/T) : ");
+        cin >> mn;
+        if(mn=="Y"||mn=="y") {
+            clear();
+            goto flight;
+        } else if(mn=="T"||mn=="t") {
+            clear();
+            goto dashboard;
+        } else {
+            msgMenuFalse();
+            goto orderPw;
+        }
     } else if(mn=="2") {
         clear();
         goto dashboard;
