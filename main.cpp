@@ -1,6 +1,8 @@
 #include <iostream>
 #include <stdlib.h>
 #include <stdio.h>
+#include <fstream>
+#include <sstream>
 
 #include "style.h"
 #include "menu.h"
@@ -10,200 +12,153 @@ using namespace std;
 
 string username, new_username, pwd, re_pwd, new_pwd, msg;
 int blc=0, topup;
+int id, valKuota, isKuota;
+char kls;
 string mn, mn_pay, ct;
-string fil;
-int fil_min, fil_max;
-bool fil_temp;
+string fil, fil_tgl;
+int fil_harga;
+string fil_asal, fil_tujuan;
+bool fil_cek;
 
 // random
 char c;
 int r;
 
 // flight
-int harga_psw, tj_psw, psw, jml_psw, bayar_psw;
+int psw_harga, psw_tj, psw_jml_tkt, psw_total;
 string psw_kls;
-string psw_rute[4] =
-{
-    "CGK-DPS",
-    "JOG-CGK",
-    "JOG-SUB",
-    "KNO-JOG"
-};
-int psw_size = (sizeof(psw_rute)/sizeof(*psw_rute));
-
-string psw_tgl[4] =
-{
-    "13-12-2018",
-    "12-12-2018",
-    "20-12-2018",
-    "30-12-2018"
-};
-
-string psw_jam[4] =
-{
-    "18.30",
-    "15.20",
-    "20.00",
-    "10.35"
+struct Pesawat {
+   string maskapai;
+   string asal;
+   string tujuan;
+   string rute;
+   string tgl;
+   string jam_terbang;
+   string jam_tiba;
+   int kls_e;
+   int kls_b;
+   int kls_x;
+   int kuota_e;
+   int kuota_b;
+   int kuota_x;
 };
 
-int psw_e[4] =
+Pesawat psw[] =
 {
-    829000,
-    484000,
-    737000,
-    950000
+    { "Garuda Indonesia", "Jakarta", "Denpasar", "CGK-DPS", "12-01-2019", "18.30", "20.00",  829000, 2048000, 10000000, 350, 18, 8 },
+    { "Citilink", "Yogyakarta", "Jakarta", "JOG-CGK", "16-01-2019", "15.10", "16.15", 484000, 1243000, 80000000, 350, 18, 8 },
+    { "Lion Air", "Surabaya", "Yogyakarta", "SUB-JOG", "18-01-2019", "21.00", "22.45", 737000, 4020000, 95000000, 350, 18, 8 },
+    { "Garuda Indonesia", "Denpasar", "Surabaya", "DPS-SUB", "21-01-2018", "10.30", "11.15", 950000, 3610000, 15000000, 350, 18, 8 },
+    { "Lion Air", "Makassar", "Yogyakarta", "UPG-JOG", "20-01-2019", "20.00", "21.00", 1200000, 4100000, 20000000, 350, 18, 8 },
+    { "Garuda Indonesia", "Kendari", "Makassar", "KDI-UPG", "28-01-2019", "04.00", "05.35", 750000, 1810000, 7840000, 150, 38, 8 },
+    { "Citilink", "Surakarta", "Yogyakarta", "SOC-JOG", "21-02-2019", "08.00", "08.45", 650000, 1610000, 9000000, 350, 18, 8 },
+    { "Lion Air", "Surakarta", "Bandung", "SOC-BDO", "15-02-2019", "13.15", "14.00", 1000000, 1510000, 8700000, 350, 18, 8 }
 };
-
-int psw_b[4] =
-{
-    2048000,
-    1243000,
-    4020000,
-    3610000
-};
-
-int psw_x[4] =
-{
-    10000000,
-    80000000,
-    95000000,
-    15000000
-};
+int psw_size = sizeof(psw)/sizeof(*psw);
 
 // train
-int krt_harga, krt_tj, krt, jml_krt, bayar_krt;
+int krt_harga, krt_tj, krt_jml_tkt, krt_total;
 string krt_kls;
-string krt_nama[4] = {
-    "Argo Parahyangan",
-    "Fajar Utama YK",
-    "Sawunggalih 123",
-    "Argo Utama 70"
+struct Kereta {
+    string krt_nama;
+    string asal;
+    string tujuan;
+    string rute;
+    string tgl;
+    string jam_berangkat;
+    string jam_tiba;
+    int kls_e;
+    int kls_b;
+    int kls_x;
+    int kuota_e;
+    int kuota_b;
+    int kuota_x;
 };
 
-string krt_rute[4] =
+Kereta krt[] =
 {
-    "GMR-BDG",
-    "YOG-PWT",
-    "PWT-JAK",
-    "BDG-SMG"
+    { "Argo Parahyangan", "Jakarta", "Bandung", "GMR-BDG", "20-01-2019", "15.30", "18.30", 110000, 250000, 350000, 450, 200, 150 },
+    { "Fajar Utama YK", "Jakarta", "Yogyakarta", "GMR-JOG", "17-01-2019", "21.30", "05.30", 250000, 350000, 425000, 500, 150, 100 },
+    { "Argo Lawu", "Jakarta", "Solo", "GMR-SLO", "22-01-2019", "06.30", "14.30", 2600000, 370000, 440000, 400, 250, 150 },
+    { "Argo Wilis", "Bandung", "Surabaya", "BDG-SBY", "20-01-2019", "15.30", "22.30", 200000, 285000, 360000, 400, 250, 150 },
+    { "Bima", "Jakarta", "Malang", "PSE-MLG", "05-02-2019", "14.00", "23.00", 225000, 300000, 380000, 450, 250, 100 },
+    { "Purwojaya", "Jakarta", "Purwokerto", "PSE-PWT", "10-02-2019", "09.00", "13.30", 170000, 220000, 3250000, 300, 250, 250 },
+    { "Taksaka", "Jakarta", "Yogyakarta", "PSE-JOG", "29-01-2019", "13.00", "20.00", 190000, 300000, 410000, 250, 300, 250 },
+    { "New Argo Jati", "Jakarta", "Cirebon", "GMR-CBN", "01-03-2019", "08.30", "18.30", 200000, 325000, 420000, 400, 250, 150 }
 };
-int krt_size = (sizeof(krt_rute)/sizeof(*krt_rute));
-
-string krt_tgl[4] =
-{
-    "14-01-2019",
-    "16-01-2019",
-    "18-01-2019",
-    "21-01-2019"
-};
-
-string krt_jam[4] =
-{
-    "20.00",
-    "19.30",
-    "21.08",
-    "17.35"
-};
-
-string krt_durasi[4] =
-{
-    "3j 14m",
-    "2j 30m",
-    "5j 10m",
-    "7j 20m"
-};
-int krt_e[4] =
-{
-    110000,
-    210000,
-    300000,
-    360000
-};
-
-int krt_b[4] =
-{
-    145000,
-    225000,
-    290000,
-    390000
-};
-
-int krt_x[4] =
-{
-    160000,
-    415000,
-    450000,
-    480000
-};
+int krt_size = sizeof(krt)/sizeof(*krt);
 
 // event
 int ev, ev_pil, ev_jml_tkt, ev_total;
 // array event
-string ev_name[5] =
+struct Event {
+    string nama;
+    string tgl;
+    string tempat;
+    int kuota;
+    int htm;
+};
+
+Event event[] =
 {
-    "Djakarta Warehouse Project 2018",
-    "JakCloth Year End Sale 2018",
-    "International Education Expo 2018",
-    "Digital Startup Connect 2018",
-    "Jogja Hobbies Festival 2018"
+    { "Djakarta Warehouse Project", "07-02-2019", "GWK Bali", 1200, 950000 },
+    { "Cold Play Concert Indonesia", "13-03-2019", "Stadion GBK, Jakarta", 6000, 700000 },
+    { "JakCloth Year End Sale", "19-01-2019", "Parkir Timur Senayan, Jakarta", 1100, 250000 },
+    { "International Education Expo", "04-02-2019", "Plaza Semanggi, Jakarta", 2000, 350000 },
+    { "Jogja Hobbies Festival", "30-01-2019", "Jogja Expo Center, Yogyakarta", 1500, 400000 },
+    { "Java Jazz", "17-02-2019", "Candi Borobudur, Magelang", 1000, 990000 },
+    { "Ed Sheeran Tour Indonesia", "06-03-2019", "Istora Senayan, Jakarta", 3500, 900000 },
+    { "Digital Startup Connect", "07-02-2019", "Balai Kartini, Jakarta", 1300,  100000  }
 };
+int ev_size = sizeof(event)/sizeof(*event);
 
-int ev_size = sizeof(ev_name)/sizeof(*ev_name);
-
-string ev_date[5]
-{
-    "7-12-2018",
-    "19-12-2018",
-    "4-08-2018",
-    "7-12-2018",
-    "30-11-2018"
+struct Riwayat {
+    int kode;
+    string type;
+    int total;
+    string pay;
 };
+Riwayat riw[100];
+int riw_size = sizeof(riw)/sizeof(*riw);
+int idRiw;
+int pay;
 
-int ev_kuota[5] {
-    300,
-    250,
-    500,
-    100,
-    150
-};
+void addRiw() {
+    idRiw+=1;
+}
 
-string ev_place[5]
-{
-    "GWK Bali",
-    "Parkir Timur Senayan, Jakarta",
-    "Plaza Semanggi, Jakarta",
-    "Balai Kartini, Jakarta",
-    "Jogja Expo Center, Yogyakarta"
-};
-
-int ev_htm[5]
-{
-    950000,
-    250000,
-    350000,
-    200000,
-    350000
-};
-
-char randomChar() {
-    int num=1;
-    for (int i=0; i<num; i++)
-    {
-        r = rand() % 26;
-        c = 'A' + r;
-        return c;
+void printTiket(int kode, string type, int total, int type_pay) {
+    string ket, pay;
+    int id = idRiw;
+    if(type=="psw") {
+        ket = "Tiket Pesawat";
+    } else if(type=="krt") {
+        ket = "Tiket Kereta";
+    } else {
+        ket = "Tiket Event";
     }
+
+    if(type_pay==1) {
+        pay = "E-Payment";
+    } else {
+        pay = "Transfer Bank";
+    }
+    riw[id].kode = kode;
+    riw[id].type = ket;
+    riw[id].total = total;
+    riw[id].pay = pay;
 }
 
-int randomInt() {
-    int n;
-    n=1+(rand()%(400));
-    return n;
-}
-
-void randomTiket() {
-    cout << "TKT-" << randomChar() << "-" << randomInt();
+void showRiwayat() {
+    for(int i=0; i<riw_size; i++) {
+        if(riw[i].kode!=0) {
+            cout << "Kode Transaksi     : PAY-" << riw[i].kode; endln(1);
+            cout << "Pembelian          : " << riw[i].type; endln(1);
+            cout << "Total Transaksi    : Rp. " << riw[i].total; endln(1);
+            cout << "Metode Pembayaran  : " << riw[i].pay; endln(1);
+            line1(70);
+        }
+    }
 }
 
 void clear() {
@@ -242,16 +197,28 @@ void msgPwd() {
     msgAlert("\t|X| Password salah, coba lagi");
 }
 
-void menuTiket(string type) {
-    line2(70);
-    endln(1);
-    out("\tDaftar Menu :");
-    out("\t[1] Filter");
-    out("\t[2] Pesan tiket");
-    out("\t[3] Kembali");
-    out(msg);
-    input("\tPilih Menu : ");
-    cin >> mn;
+char randChar(int MAX) {
+    int num=1;
+    for (int i=0; i<num; i++)
+    {
+        r = rand() % MAX;
+        c = 'A' + r;
+        return c;
+    }
+}
+
+int randInt(int MAX) {
+    int n;
+    n=1+(rand()%(MAX));
+    return n;
+}
+
+void randTransaksi() {
+    cout << "PAY-" << randInt(999);
+}
+
+void randTiket() {
+    cout << "TKT-" << randChar(26) << "-" << randInt(999);
 }
 
 void inputPilihan(string tiket) {
@@ -261,9 +228,7 @@ void inputPilihan(string tiket) {
         size=psw_size;
     } else if(tiket=="kereta") {
         size=krt_size;
-    } else if(tiket=="film") {
-        ket="film";
-    } else if(tiket=="event") {
+    } else {
         size=ev_size;
         ket="event";
     }
@@ -276,48 +241,232 @@ void inputPilihan(string tiket) {
 
 void pilihKelas(string kelas) {
     endln(1);
+    line2(70);
     if(kelas=="pesawat") {
-        cout << "Penerbangan : " << psw_rute[psw]; endln(1);
+        cout << "Rute       : " << psw[id].rute; endln(1);
+        cout << "Asal       : " << psw[id].asal; endln(1);
+        cout << "Tujuan     : " << psw[id].tujuan; endln(1);
+        cout << "Maskapai   : " << psw[id].maskapai; endln(1);
+        line2(70);
+        tab(3); out("Harga"); line1(70);
         out("Ekonomi(E)     Bisnis(B)       Eksekutif(X)");
         line1(70);
         for(int i=0; i<1; i++) {
         cout << "Rp."
-            << psw_e[psw]
+            << psw[id].kls_e
             << "     Rp."
-            << psw_b[psw]
+            << psw[id].kls_b
             << "        Rp."
-            << psw_x[psw]; endln(1);
+            << psw[id].kls_x; endln(1);
+        }
+        line2(70);
+        tab(3); out("Kuota"); line1(70);
+        out("Ekonomi(E)     Bisnis(B)       Eksekutif(X)");
+        line1(70);
+        for(int i=0; i<1; i++) {
+        cout << "   "
+            << psw[id].kuota_e
+            << "             "
+            << psw[id].kuota_b
+            << "                "
+            << psw[id].kuota_x; endln(1);
         }
     } else if(kelas=="kereta") {
-        cout << "Rute       : " << krt_rute[krt]; endln(1);
-        cout << "Kereta     : " << krt_nama[krt]; endln(1);
+        cout << "Kereta     : " << krt[id].krt_nama; endln(1);
+        cout << "Rute       : " << krt[id].rute; endln(1);
+        cout << "Asal       : " << krt[id].asal; endln(1);
+        cout << "Tujuan     : " << krt[id].tujuan; endln(1);
         line2(70);
+        tab(3); out("Harga"); line1(70);
         out("Ekonomi(E)     Bisnis(B)       Eksekutif(X)");
         line1(70);
         for(int i=0; i<1; i++) {
         cout << "Rp."
-            << krt_e[krt]
+            << krt[id].kls_e
             << "     Rp."
-            << krt_b[krt]
+            << krt[id].kls_b
             << "        Rp."
-            << krt_x[krt];
+            << krt[id].kls_x;
             endln(1);
+        }
+        line2(70);
+        tab(3); out("Kuota"); line1(70);
+        out("Ekonomi(E)     Bisnis(B)       Eksekutif(X)");
+        line1(70);
+        for(int i=0; i<1; i++) {
+        cout << "   "
+            << krt[id].kuota_e
+            << "             "
+            << krt[id].kuota_b
+            << "                "
+            << krt[id].kuota_x; endln(1);
         }
     }
     line2(70); endln(1);
     cout << "\t> Pilih kelas " << kelas << "(E/B/X) : ";
 }
 
-void isiEvent(int i) {
-    cout << i+1 << ".      "
-        << ev_kuota[i] << "        "
-        << ev_htm[i] << "       "
-        << ev_name[i];
-        endln(1);
+void detailEvent(int t) {
+    if(t==1) {
+        cout << "  No. Transaksi   : PAY-" << idRiw; endln(1);
+    }
+    cout << "  Nama event      : " << event[id].nama; endln(1);
+    cout << "  Tanggal         : " << event[id].tgl; endln(1);
+    cout << "  Tempat          : " << event[id].tempat; endln(1);
+    if(t==0) {
+        cout << "  Kuota           : " << event[id].kuota; endln(1);
+    }
+    cout << "  HTM             : Rp. " << event[id].htm; endln(1);
+    line1(70);
+}
+
+// validate kuota
+int validateKuota(string type, int tkt_count) {
+    int kuota_e, kuota_b, kuota_x;
+    if(type=="psw") {
+        kuota_e=psw[id].kuota_e;
+        kuota_b=psw[id].kuota_b;
+        kuota_x=psw[id].kuota_x;
+    } else {
+        kuota_e=krt[id].kuota_e;
+        kuota_b=krt[id].kuota_b;
+        kuota_x=krt[id].kuota_x;
+    }
+    if(tkt_count<1) {
+        msgAlert("\t|X| Jumlah penumpang minimal 1!");
+        return 0;
+    } else {
+        switch(kls) {
+            case 'e': valKuota = kuota_e; break;
+            case 'b': valKuota = kuota_b; break;
+            case 'x': valKuota = kuota_x; break;
+        }
+        if(tkt_count>valKuota) {
+            msgAlert("\t|X| Kuota tiket tidak cukup!");
+            return 1;
+        } else {
+            return 2;
+        }
+    }
+}
+
+// payment menu
+void onPayment(string type) {
+    string ket;
+    int total;
+    if(type=="psw") {
+        ket="Pesawat";
+        total=psw_total;
+    } else if(type=="krt") {
+        ket="Kereta";
+        total=krt_total;
+    } else {
+        ket="Event";
+        total=ev_total;
+    }
+    header("Halaman Pembayaran Tiket "+ket);
+    cout << "\tTotal pembayaran : Rp. " << total;
+    endln(1);
+    cout << "\tSaldo E-Pay Anda : Rp. " << blc;
+    endln(2);
+    menuPayment();
+    out(msg);
+    input("\tPilih metode pembayaran : ");
+    cin >> mn_pay;
+    if(mn_pay=="1") {
+        if(blc>total) {
+            pay=1;
+            blc = blc-total;
+            addRiw();
+            printTiket(idRiw, type, total, pay);
+            clear();
+        } else {
+            msgPayment();
+            input("\t> Jumlah topup saldo : Rp.");
+            cin >> topup;
+            if(topup>100000) {
+                input("\t> Masukan password Anda : ");
+                cin >> pwd;
+                if(pwd==re_pwd) {
+                    blc += topup;
+                    msgSuccess("\t|✔| Topup saldo berhasil");
+                    onPayment(type);
+                } else {
+                    msgPwd();
+                    onPayment(type);
+                }
+            } else {
+                msgAlert("\t|X| Topup saldo minimal Rp.100000 !");
+                onPayment(type);
+            }
+        }
+    } else if(mn_pay=="2") {
+        showTransferPay();
+        input("\t  Lanjutkan pembayaran ? (Y/T) : ");
+        cin >> ct;
+        if(ct=="Y"||ct=="y") {
+            pay=2;
+            addRiw();
+            printTiket(idRiw, type, total, pay);
+            clear();
+        } else if(ct=="T"||ct=="t") {
+            clear();
+            onPayment(type);
+        } else {
+            msgMenuFalse();
+            onPayment(type);
+        }
+    } else {
+        msgMenuFalse();
+        onPayment(type);
+    }
+}
+
+void filterData(string type, int i) {
+    if(type=="psw") {
+        cout << i+1
+        << ".     "
+        << psw[i].rute
+        << "        "
+        << psw[i].tgl
+        << "         "
+        << psw[i].jam_terbang
+        << "         "
+        << psw[i].jam_tiba;
+    } else if(type=="krt") {
+        cout << i+1
+        << ".     "
+        << krt[i].rute
+        << "        "
+        << krt[i].tgl
+        << "            "
+        << krt[i].jam_berangkat
+        << "          "
+        << krt[i].jam_tiba;
+    } else {
+        cout << i+1 << ".      "
+        << event[i].tgl << "      Rp."
+        << event[i].htm << "       "
+        << event[i].nama;
+    }
+    endln(1);
 }
 
 void resetFilter() {
     fil="";
+}
+
+void resetData() {
+    blc=0;
+    idRiw=0;
+    resetFilter();
+    // reset riwayat
+    for(int i; i<riw_size; i++) {
+        riw[i].kode = 0;
+        riw[i].type = "";
+        riw[i].total = 0;
+        riw[i].pay = "";
+    }
 }
 
 int main()
@@ -337,10 +486,26 @@ int main()
         goto signup;
     } else if(mn=="2") {
         clear();
+        goto aplikasi;
+    } else if(mn=="3") {
+        clear();
         exit(0);
     } else {
         msgMenuFalse();
         goto home;
+    }
+
+    aplikasi:
+    header("Halaman Aplikasi");
+    detailApp();
+    out(msg);
+    input("\tPilih menu : "); cin >> mn;
+    if(mn=="1") {
+        clear();
+        goto home;
+    } else {
+        msgMenuFalse();
+        goto aplikasi;
     }
 
     // Halaman signup
@@ -352,7 +517,7 @@ int main()
     out(msg);
     input("\t  > Username : "); cin >> username;
     input("\t  > Password : "); cin >> pwd;
-    input("\t  > Confirm Password : "); cin >> re_pwd;
+    input("\t  > Konfirmasi Password : "); cin >> re_pwd;
     // auth and signup
     if(pwd==re_pwd) {
         clear();
@@ -364,6 +529,8 @@ int main()
 
     // Halaman dashboard
     dashboard:
+    fil_cek=true;
+    resetFilter();
     header("Halaman Dashboard");
     cout << "\tSelamat Datang " << username;
     menuDashboard();
@@ -372,134 +539,132 @@ int main()
     cin >> mn;
     if(mn=="1") {
         clear();
-        goto psw;
+        goto pesawat;
     } else if(mn=="2") {
         clear();
         goto krt;
-    } else if(mn=="4") {
+    } else if(mn=="3") {
         clear();
         goto event;
-    } else if(mn=="5") {
+    } else if(mn=="4") {
         clear();
         goto epay;
-    } else if(mn=="6") {
+    } else if(mn=="5") {
         clear();
         goto profile;
+    } else if(mn=="6") {
+        clear();
+        goto riwayat;
     } else if(mn=="7") {
         clear();
+        resetData();
         goto home;
-    } else {
+    }else {
         msgMenuFalse();
         goto dashboard;
     }
 
     // Halaman flight
-    psw:
+    pesawat:
     header("Halaman Tiket Pesawat");
     endln(1);
     line2(70);
     out("                       DAFTAR PENERBANGAN           ");
     line2(70);
-    out("No      Rute            Tanggal         Keberangkatan");
+    out("No      Rute            Tanggal         Terbang        Tiba");
     line1(70);
     for(int i=0; i<psw_size; i++) {
-        cout << i+1
-        << ".     "
-        << psw_rute[i]
-        << "        "
-        << psw_tgl[i]
-        << "            "
-        << psw_jam[i];
-        endln(1);
+        if(fil=="1") {
+            if(psw[i].asal==fil_asal&&psw[i].tujuan==fil_tujuan) {
+                filterData("psw", i);
+                fil_cek=true;
+            }
+        } else if(fil=="2") {
+            if(psw[i].tgl==fil_tgl) {
+                filterData("psw", i);
+                fil_cek=true;
+            }
+        } else {
+            filterData("psw", i);
+        }
     }
-    menuTiket("pesawat");
+
+    /*if(!fil_cek) {
+        tab(3); out("Penerbangan tidak tersedia");
+    }*/
+    menuTiket();
+    out(msg);
+    input("\tPilih Menu : "); cin >> mn;
     if(mn=="1") {
+        endln(1);
+        out("\t[1] Berdasarkan rute");
+        out("\t[2] Berdasarkan tanggal");
+        input("\tInput pilihan filter : "); cin >> fil;
+        if(fil=="1") {
+            input("\t  > Input kota asal    : "); cin>>fil_asal;
+            input("\t  > Input kota tujuan  : "); cin>>fil_tujuan;
+            clear();
+            goto pesawat;
+        } else if(fil=="2") {
+            input("\t  > Input tanggal penerbangan (dd-mm-yyyy) : "); cin >> fil_tgl;
+            clear();
+            goto pesawat;
+        } else {
+            msgMenuFalse();
+            goto pesawat;
+        }
+    } else if(mn=="2") {
+        resetFilter();
+        goto pesawat;
+    } else if(mn=="3") {
         inputPilihan("pesawat");
-        cin >> tj_psw;
-        psw=tj_psw-1;
-        if(tj_psw>psw_size||tj_psw<1) {
+        cin >> psw_tj;
+        id=psw_tj-1;
+        if(psw_tj>psw_size||psw_tj<1) {
             msgAlert("\t|X| Pilihan penerbangan tidak ada!");
-            goto psw;
+            goto pesawat;
         }
         pilihKelas("pesawat");
         cin >> psw_kls;
         if(psw_kls=="E" || psw_kls=="e") {
+            kls='e';
             psw_kls="Ekonomi (E)";
-            harga_psw = psw_e[psw];
+            psw_harga = psw[id].kls_e;
         } else if(psw_kls=="B" || psw_kls=="b") {
+            kls='b';
             psw_kls="Bisnis (B)";
-            harga_psw = psw_b[psw];
+            psw_harga = psw[id].kls_b;
         } else if(psw_kls=="X" || psw_kls=="x") {
+            kls='x';
             psw_kls="Eksekutif (X)";
-            harga_psw = psw_x[psw];
+            psw_harga = psw[id].kls_x;
         } else {
             msgAlert("\t|X| Kelas pesawat tidak tersedia!");
-            goto psw;
+            goto pesawat;
         }
         input("\t> Input jumlah penumpang : ");
-        cin >> jml_psw;
-        if(jml_psw<1) {
-            msgAlert("\t|X| Jumlah penumpang minimal 1!");
-            goto psw;
+        cin >> psw_jml_tkt;
+        isKuota=validateKuota("psw", psw_jml_tkt);
+        if(isKuota==0) {
+            goto pesawat;
+        } else if(isKuota==1) {
+            goto pesawat;
         }
-        bayar_psw = jml_psw*harga_psw;
-        string nama_psw[jml_psw];
-        int psw_nama_size = (sizeof(nama_psw)/sizeof(*nama_psw));
-        for(int i=0; i<jml_psw; i++) {
+        psw_total = psw_jml_tkt*psw_harga;
+        string psw_penumpang[psw_jml_tkt];
+        int psw_nama_size = (sizeof(psw_penumpang)/sizeof(*psw_penumpang));
+        for(int i=0; i<psw_jml_tkt; i++) {
             cout << "\t  " << i+1 <<". Nama penumpang : ";
-            cin >> nama_psw[i];
+            cin >> psw_penumpang[i];
+        }
+        switch(kls) {
+            case 'e': psw[id].kuota_e-=psw_jml_tkt; break;
+            case 'b': psw[id].kuota_b-=psw_jml_tkt; break;
+            case 'x': psw[id].kuota_x-=psw_jml_tkt; break;
         }
         clear();
-        goto paymentPsw;
+        onPayment("psw");
 
-        paymentPsw:
-        header("Halaman Pembayaran Tiket Pesawat");
-        cout << "\tTotal pembayaran : Rp. " << bayar_psw;
-        endln(1);
-        cout << "\tSaldo E-Pay Anda : Rp. " << blc;
-        endln(2);
-        menuPayment();
-        out(msg);
-        input("\tPilih metode pembayaran : ");
-        cin >> mn_pay;
-        if(mn_pay=="1") {
-            if(blc>bayar_psw) {
-                blc = blc-bayar_psw;
-                clear();
-                goto orderPsw;
-            } else {
-                msgPayment();
-                input("\t> Jumlah topup saldo : Rp.");
-                cin >> topup;
-                input("\t> Masukan password Anda : ");
-                cin >> pwd;
-                if(pwd==re_pwd) {
-                    blc += topup;
-                    msgSuccess("\t|✔| Topup saldo berhasil");
-                    goto paymentPsw;
-                } else {
-                    msgPwd();
-                    goto paymentPsw;
-                }
-            }
-        } else if(mn_pay=="2") {
-            showTransferPay();
-            input("\t  Lanjutkan pembayaran ? (Y/T) : ");
-            cin >> ct;
-            if(ct=="Y"||ct=="y") {
-                clear();
-                goto orderPsw;
-            } else if(ct=="T"||ct=="t") {
-                clear();
-                goto paymentPsw;
-            } else {
-                msgMenuFalse();
-                goto paymentPsw;
-            }
-        } else {
-            msgMenuFalse();
-            goto paymentPsw;
-        }
         // Detail pemesanan pesawat
         orderPsw:
         header("Halaman Tiket Penerbangan");
@@ -508,30 +673,28 @@ int main()
         tab(3);
         out("TIKET PENERBANGAN");
         line2(70);
-        cout << "  No. Tiket      : "; randomTiket();
-        endln(1);
+        cout << "  No. Transaksi  : PAY-" << idRiw; endln(1);
         line1(70);
-        cout << "  Penerbangan    : " << psw_rute[psw];
-        endln(1);
-        cout << "  Kelas          : " << psw_kls;
-        endln(1);
-        cout << "  Gerbang        : " << randomChar() << randomInt();
-        endln(1);
-        cout << "  Tanggal        : " << psw_tgl[psw];
-        endln(1);
-        cout << "  Waktu          : " << psw_jam[psw];
-        endln(1);
+        cout << "  Rute           : " << psw[id].rute; endln(1);
+        cout << "  Penerbangan    : " << psw[id].asal+"-"+psw[id].tujuan; endln(1);
+        cout << "  Maskapai       : " << psw[id].maskapai; endln(1);
+        cout << "  Kelas          : " << psw_kls; endln(1);
+        cout << "  Gerbang        : " << randChar(7) << randInt(12); endln(1);
+        cout << "  Tanggal        : " << psw[id].tgl; endln(1);
+        cout << "  Jam Terbang    : " << psw[id].jam_terbang; endln(1);
+        cout << "  Jam Tiba       : " << psw[id].jam_tiba; endln(1);
         line1(70);
         out("  Nama penumpang :");
         for(int i=0; i<psw_nama_size; i++) {
-            cout << "   " << i+1 << ". " << nama_psw[i]
-            << "  (" << randomInt() << "-" << randomChar() << ")";
-            endln(1);
+            cout << "   " << i+1 << ". " << psw_penumpang[i]
+                << "  ( No. Tiket : TKT-" << randChar(26) << "-" << randInt(999)
+                << ", Kursi : " << randInt(350) << randChar(12) << ")";
+                endln(1);
         }
         line1(70);
-        cout << "  Harga tiket    : Rp. " << harga_psw; endln(1);
-        cout << "  Jumlah tiket   : " << jml_psw; endln(1);
-        cout << "  Total          : Rp. " << bayar_psw; endln(1);
+        cout << "  Harga tiket    : Rp. " << psw_harga; endln(1);
+        cout << "  Jumlah tiket   : " << psw_jml_tkt; endln(1);
+        cout << "  Total          : Rp. " << psw_total; endln(1);
         line1(70);
         endln(1);
         out(msg);
@@ -539,7 +702,7 @@ int main()
         cin >> mn;
         if(mn=="Y"||mn=="y") {
             clear();
-            goto psw;
+            goto pesawat;
         } else if(mn=="T"||mn=="t") {
             clear();
             goto dashboard;
@@ -547,12 +710,12 @@ int main()
             msgMenuFalse();
             goto orderPsw;
         }
-    } else if(mn=="2") {
+    }  else if(mn=="4") {
         clear();
         goto dashboard;
     } else {
         msgMenuFalse();
-        goto psw;
+        goto pesawat;
     }
 
     krt:
@@ -561,25 +724,55 @@ int main()
     line2(70);
     out("                           JADWAL KERETA API           ");
     line2(70);
-    out("No      Rute            Tanggal         Keberangkatan      Durasi");
+    out("No      Rute            Tanggal           Berangkat        Tiba");
     line1(70);
     for(int i=0; i<krt_size; i++) {
-        cout << i+1
-        << ".     "
-        << krt_rute[i]
-        << "        "
-        << krt_tgl[i]
-        << "            "
-        << krt_jam[i]
-        << "          "
-        << krt_durasi[i];
-        endln(1);
+        if(fil=="1") {
+            if(krt[i].asal==fil_asal&&krt[i].tujuan==fil_tujuan) {
+                filterData("krt", i);
+                fil_cek=true;
+            }
+        } else if(fil=="2") {
+            if(krt[i].tgl==fil_tgl) {
+                filterData("krt", i);
+                fil_cek=true;
+            }
+        } else {
+            filterData("krt", i);
+        }
     }
-    menuTiket("kereta");
+
+    /*if(!fil_cek) {
+        tab(3); out("Penerbangan tidak tersedia");
+    }*/
+    menuTiket();
+    out(msg);
+    input("\tPilih Menu : "); cin >> mn;
     if(mn=="1") {
+        endln(1);
+        out("\t[1] Berdasarkan rute");
+        out("\t[2] Berdasarkan tanggal");
+        input("\tInput pilihan filter : "); cin >> fil;
+        if(fil=="1") {
+            input("\t  > Input kota asal    : "); cin>>fil_asal;
+            input("\t  > Input kota tujuan  : "); cin>>fil_tujuan;
+            clear();
+            goto krt;
+        } else if(fil=="2") {
+            input("\t  > Input tanggal keberangkatan (dd-mm-yyyy) : "); cin >> fil_tgl;
+            clear();
+            goto krt;
+        } else {
+            msgMenuFalse();
+            goto krt;
+        }
+    } else if(mn=="2") {
+        resetFilter();
+        goto krt;
+    } else if(mn=="3") {
         inputPilihan("kereta");
         cin >> krt_tj;
-        krt=krt_tj-1;
+        id=krt_tj-1;
         if(krt_tj>krt_size||krt_tj<1) {
             msgAlert("\t|X| Jadwal yang dipilih tidak tersedia!");
             goto krt;
@@ -587,82 +780,44 @@ int main()
         pilihKelas("kereta");
         cin >> krt_kls;
         if(krt_kls=="E" || krt_kls=="e") {
+            kls='e';
             krt_kls="Ekonomi (E)";
-            krt_harga = krt_e[krt];
+            krt_harga = krt[id].kls_e;
         } else if(krt_kls=="B" || krt_kls=="b") {
+            kls='b';
             krt_kls="Bisnis (B)";
-            krt_harga = krt_b[krt];
+            krt_harga = krt[id].kls_b;
         } else if(krt_kls=="X" || krt_kls=="x") {
+            kls='x';
             krt_kls="Eksekutif (X)";
-            krt_harga = krt_x[krt];
+            krt_harga = krt[id].kls_x;
         } else {
             msgAlert("\t|X| Kelas kereta tidak tersedia!");
             goto krt;
         }
         input("\t> Input jumlah penumpang : ");
-        cin >> jml_krt;
-        if(jml_krt<1) {
-            msgAlert("\t|X| Jumlah penumpang minimal 1!");
+        cin >> krt_jml_tkt;
+        isKuota=validateKuota("krt", krt_jml_tkt);
+        if(isKuota==0) {
+            goto krt;
+        } else if(isKuota==1) {
             goto krt;
         }
-        bayar_krt = jml_krt*krt_harga;
-        string nama_krt[jml_krt];
+        krt_total = krt_jml_tkt*krt_harga;
+        string nama_krt[krt_jml_tkt];
         int krt_nama_size = (sizeof(nama_krt)/sizeof(*nama_krt));
-        for(int i=0; i<jml_krt; i++) {
+        for(int i=0; i<krt_jml_tkt; i++) {
             cout << "\t  " << i+1 <<". Nama penumpang : ";
             cin >> nama_krt[i];
         }
-        clear();
-        goto paymentKrt;
-
-        paymentKrt:
-        header("Halaman Pembayaran Tiket Kereta");
-        cout << "\tTotal pembayaran : Rp. " << bayar_krt;
-        endln(1);
-        cout << "\tSaldo E-Pay Anda : Rp. " << blc;
-        endln(2);
-        menuPayment();
-        out(msg);
-        input("\tPilih metode pembayaran : ");
-        cin >> mn_pay;
-        if(mn_pay=="1") {
-            if(blc>bayar_krt) {
-                blc=blc-bayar_krt;
-                clear();
-                goto orderKrt;
-            } else {
-                msgPayment();
-                input("\t> Jumlah topup saldo : Rp.");
-                cin >> topup;
-                input("\t> Masukan password Anda : ");
-                cin >> pwd;
-                if(pwd==re_pwd) {
-                    blc += topup;
-                    msgSuccess("\t|✔| Topup saldo berhasil");
-                    goto paymentKrt;
-                } else {
-                    msgPwd();
-                    goto paymentKrt;
-                }
-            }
-        } else if(mn_pay=="2") {
-            showTransferPay();
-            input("\t  Lanjutkan pembayaran ? (Y/T) : ");
-            cin >> ct;
-            if(ct=="Y"||ct=="y") {
-                clear();
-                goto orderKrt;
-            } else if(ct=="T"||ct=="t") {
-                clear();
-                goto paymentKrt;
-            } else {
-                msgMenuFalse();
-                goto paymentKrt;
-            }
-        } else {
-            msgMenuFalse();
-            goto paymentKrt;
+        switch(kls) {
+            case 'e': krt[id].kuota_e-=krt_jml_tkt; break;
+            case 'b': krt[id].kuota_b-=krt_jml_tkt; break;
+            case 'x': krt[id].kuota_x-=krt_jml_tkt; break;
         }
+        clear();
+        onPayment("krt");
+
         // Detail pemesanan tiket kereta
         orderKrt:
         header("Halaman Tiket Kereta");
@@ -670,25 +825,27 @@ int main()
         line2(70);
         tab(3); out("TIKET KERETA API");
         line2(70);
-        cout << "  No. Tiket      : "; randomTiket(); endln(1);
+        cout << "  No. Transaksi  : PAY-" << idRiw; endln(1);
         line1(70);
-        cout << "  Rute           : " << krt_rute[krt]; endln(1);
-        cout << "  Kereta         : " << krt_nama[krt]; endln(1);
+        cout << "  Rute           : " << krt[id].rute; endln(1);
+        cout << "  Perjalanan     : " << krt[id].asal << "-" << krt[id].tujuan; endln(1);
+        cout << "  Kereta         : " << krt[id].krt_nama; endln(1);
         cout << "  Kelas          : " << krt_kls; endln(1);
-        cout << "  Tanggal        : " << krt_tgl[krt]; endln(1);
-        cout << "  Waktu          : " << krt_jam[krt]; endln(1);
-        cout << "  Durasi         : " << krt_durasi[krt]; endln(1);
+        cout << "  Tanggal        : " << krt[id].tgl; endln(1);
+        cout << "  Berangkat      : " << krt[id].jam_berangkat; endln(1);
+        cout << "  Tiba           : " << krt[id].jam_tiba; endln(1);
         line1(70);
         out("  Nama penumpang :");
         for(int i=0; i<krt_nama_size; i++) {
             cout << "   " << i+1 << ". " << nama_krt[i]
-            << "  (" << randomInt() << "-" << randomChar() << ")";
-            endln(1);
+                << "  ( No. Tiket : TKT-" << randChar(26) << "-" << randInt(999)
+                << ", Kursi : " << randInt(450) << randChar(12) << ")";
+                endln(1);
         }
         line1(70);
         cout << "  Harga tiket    : Rp. " << krt_harga; endln(1);
-        cout << "  Jumlah tiket   : " << jml_krt; endln(1);
-        cout << "  Total          : Rp. " << bayar_krt; endln(1);
+        cout << "  Jumlah tiket   : " << krt_jml_tkt; endln(1);
+        cout << "  Total          : Rp. " << krt_total; endln(1);
         line1(70); endln(1);
         out(msg);
         input("\t> Pesan tiket kereta lagi ? (Y/T) : "); cin >> mn;
@@ -702,7 +859,7 @@ int main()
             msgMenuFalse();
             goto orderKrt;
         }
-    } else if(mn=="2") {
+    } else if(mn=="4") {
         clear();
         goto dashboard;
     } else {
@@ -715,111 +872,90 @@ int main()
     header("Halaman Tiket Event");
     endln(1);
     line2(70);
-    tab(3);
-    out("   DAFTAR EVENT");
+    tab(3); out("   DAFTAR EVENT");
     line2(70);
-    out("Kode.    Kuota        HTM          Nama Event");
+    out("Kode.    Tanggal           HTM          Nama Event");
     line1(70);
     for(int i=0; i<ev_size; i++) {
         if(fil=="1") {
-            if(ev_htm[i]>=fil_min && ev_htm[i]<=fil_max) {
-                isiEvent(i);
+            if(event[i].htm<=fil_harga) {
+                filterData("ev", i);
+                fil_cek=true;
             } else {
-                fil_temp=false;
+                fil_cek=false;
+            }
+        } else if(fil=="2") {
+            if(event[i].tgl==fil_tgl) {
+                filterData("ev", i);
+                fil_cek=true;
             }
         } else {
-            isiEvent(i);
+            filterData("ev", i);
+            fil_cek=true;
         }
     }
 
-    if(fil_temp==false) {
-        tab(3); ("Event tidak tersedia");
-    }
-    menuTiket("event");
+    /*if(!fil_cek) {
+        tab(3); out("Event tidak tersedia");
+    }*/
+    menuTiket();
+    out(msg);
+    input("\tPilih Menu : "); cin >> mn;
     if(mn=="1") {
+        endln(1);
         out("\t[1] Berdasarkan harga");
         out("\t[2] Berdasarkan tanggal");
-        out("\t[3] Berdasarkan nama");
         input("\tInput pilihan filter : "); cin >> fil;
         if(fil=="1") {
-            input("\t  > Input harga terendah  : "); cin>>fil_min;
-            input("\t  > Input harga tertinggi : "); cin>>fil_max;
-            if(fil_max<fil_min) {
-                msgAlert("\t|X| Inputan harga tidak sesuai!");
+            input("\t  > Input budget anda : Rp. "); cin>>fil_harga;
+            if(fil_harga<1) {
+                msgAlert("\t|X| Filter harga harus diisi!");
                 goto event;
             } else {
                 clear();
                 goto event;
             }
+        } else if(fil=="2") {
+            input("\t  > Input tanggal event (dd-mm-yyyy) : "); cin >> fil_tgl;
+            clear();
+            goto event;
+        } else {
+            msgMenuFalse();
+            goto event;
         }
-    }else if(mn=="2") {
+    } else if(mn=="2") {
+        resetFilter();
+        goto event;
+    } else if(mn=="3") {
         inputPilihan("event");
         cin >> ev_pil;
-        ev = ev_pil-1;
+        id = ev_pil-1;
         if(ev_pil > ev_size || ev_pil < 1) {
             msgAlert("\t|X| Event yang dipilih tidak tersedia!");
             goto event;
         }
+        line1(70);
+        tab(3); out("DETAIL EVENT");
+        line1(70);
+        detailEvent(0);
         input("\t> Input jumlah tiket : ");
         cin >> ev_jml_tkt;
-        if(ev_jml_tkt > ev_kuota[ev]) {
+        if(ev_jml_tkt > event[id].kuota) {
             msgAlert("\t|X| Jumlah tiket melebihi kuota !");
             goto event;
+        } else if(ev_jml_tkt < 1) {
+            msgAlert("\t|X| Pembelian tiket minimal 1 !");
+            goto event;
         } else {
-            ev_total=ev_jml_tkt*ev_htm[ev];
+            ev_total=ev_jml_tkt*event[id].htm;
+            event[id].kuota-=ev_jml_tkt;
             clear();
             goto paymentEvent;
         }
 
         paymentEvent:
-        header("Halaman Pembayaran Tiket Event");
-        endln(1);
-        cout << "\tTotal pembayaran : Rp. " << ev_total;
-        endln(1);
-        cout << "\tSaldo E-Pay Anda : Rp. " << blc;
-        endln(2);
-        menuPayment();
-        out(msg);
-        input("\tPilih metode pembayaran : ");
-        cin >> mn_pay;
-        if(mn_pay=="1") {
-            if(blc>ev_total) {
-                blc=blc-ev_total;
-                clear();
-                goto orderEvent;
-            } else {
-                msgPayment();
-                input("\t> Jumlah topup saldo : Rp.");
-                cin >> topup;
-                input("\t> Masukan password Anda : ");
-                cin >> pwd;
-                if(pwd==re_pwd) {
-                    blc += topup;
-                    msgSuccess("\t|✔| Topup saldo berhasil");
-                    goto paymentEvent;
-                } else {
-                    msgPwd();
-                    goto paymentEvent;
-                }
-            }
-        } else if(mn_pay=="2") {
-            showTransferPay();
-            input("\t  Lanjutkan pembayaran ? (Y/T) : ");
-            cin >> ct;
-            if(ct=="Y"||ct=="y") {
-                clear();
-                goto orderEvent;
-            } else if(ct=="T"||ct=="t") {
-                clear();
-                goto paymentEvent;
-            } else {
-                msgMenuFalse();
-                goto paymentEvent;
-            }
-        } else {
-            msgMenuFalse();
-            goto paymentEvent;
-        }
+        resetFilter();
+        onPayment("ev");
 
         orderEvent:
         header("Halaman Tiket Event");
@@ -827,13 +963,9 @@ int main()
         line2(70);
         tab(3); out("   TIKET EVENT");
         line2(70);
-        cout << "  Nama Event     : " << ev_name[ev]; endln(1);
-        cout << "  Tanggal        : " << ev_date[ev]; endln(1);
-        cout << "  Tempat         : " << ev_place[ev]; endln(1);
-        cout << "  HTM            : Rp. " << ev_htm[ev]; endln(1);
-        line1(70);
+        detailEvent(1);
         for(int i=0; i<ev_jml_tkt; i++) {
-            cout << "  No. Tiket ke-" << i+1 << " : "; randomTiket();
+            cout << "  No. Tiket ke-" << i+1 << "  : "; randTiket();
             endln(1);
         }
         line1(70);
@@ -852,8 +984,8 @@ int main()
             msgMenuFalse();
             goto orderEvent;
         }
-        resetFilter;
-    } else if(mn=="2") {
+        resetFilter();
+    } else if(mn=="4") {
         clear();
         goto dashboard;
     } else {
@@ -914,15 +1046,19 @@ int main()
     if(mn == "1") {
         input("\tJumlah topup saldo : Rp.");
         cin >> topup;
-        input("\tMasukan password Anda : ");
-        cin >> pwd;
-        if(pwd==re_pwd) {
-            blc += topup;
-            msgSuccess("\t|✔| Topup saldo berhasil");
-            goto epay;
+        if(topup>100000) {
+            input("\tMasukan password Anda : ");
+            cin >> pwd;
+            if(pwd==re_pwd) {
+                blc += topup;
+                msgSuccess("\t|✔| Topup saldo berhasil");
+                goto epay;
+            } else {
+                msgPwd();
+                goto epay;
+            }
         } else {
-            msgPwd();
-            goto epay;
+            msgAlert("\t|X| Topup saldo minimal Rp.100000 !");
         }
     } else if(mn=="2") {
         clear();
@@ -930,6 +1066,21 @@ int main()
     } else {
         msgMenuFalse();
         goto epay;
+    }
+
+    riwayat:
+    header("Halaman Riwayat Transaksi");
+    showRiwayat();
+    out("\tPilihan menu : ");
+    out("\t[1]. Kembali");
+    out(msg);
+    input("\tPilih menu : "); cin >> mn;
+    if(mn=="1") {
+        clear();
+        goto dashboard;
+    } else {
+        msgMenuFalse();
+        goto riwayat;
     }
 
     return 0;

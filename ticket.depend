@@ -9,7 +9,7 @@
 
 1544516922 c:\users\dicky\downloads\compressed\ticket-master\style.h
 
-1546243127 source:/home/didik/ticket/main.cpp
+1546308463 source:/home/didik/ticket/main.cpp
 	<iostream>
 	<stdlib.h>
 	<stdio.h>
@@ -19,4 +19,17 @@
 1545619633 /home/didik/ticket/style.h
 
 1545845678 /home/didik/ticket/menu.h
+
+1547128203 source:/home/didik/Codeblocks/ticket/main.cpp
+	<iostream>
+	<stdlib.h>
+	<stdio.h>
+	<fstream>
+	<sstream>
+	"style.h"
+	"menu.h"
+
+1547128484 /home/didik/Codeblocks/ticket/style.h
+
+1547126472 /home/didik/Codeblocks/ticket/menu.h
 
