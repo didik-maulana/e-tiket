@@ -384,7 +384,7 @@ void onPayment(string type) {
             msgPayment();
             input("\t> Jumlah topup saldo : Rp.");
             cin >> topup;
-            if(topup>100000) {
+            if(topup>=100000) {
                 input("\t> Masukan password Anda : ");
                 cin >> pwd;
                 if(pwd==re_pwd) {
@@ -597,7 +597,7 @@ int main()
     input("\tPilih Menu : "); cin >> mn;
     if(mn=="1") {
         endln(1);
-        out("\t[1] Berdasarkan rute");
+        out("\t[1] Berdasarkan kota");
         out("\t[2] Berdasarkan tanggal");
         input("\tInput pilihan filter : "); cin >> fil;
         if(fil=="1") {
@@ -750,7 +750,7 @@ int main()
     input("\tPilih Menu : "); cin >> mn;
     if(mn=="1") {
         endln(1);
-        out("\t[1] Berdasarkan rute");
+        out("\t[1] Berdasarkan kota");
         out("\t[2] Berdasarkan tanggal");
         input("\tInput pilihan filter : "); cin >> fil;
         if(fil=="1") {
@@ -1046,7 +1046,7 @@ int main()
     if(mn == "1") {
         input("\tJumlah topup saldo : Rp.");
         cin >> topup;
-        if(topup>100000) {
+        if(topup>=100000) {
             input("\tMasukan password Anda : ");
             cin >> pwd;
             if(pwd==re_pwd) {
@@ -1059,6 +1059,7 @@ int main()
             }
         } else {
             msgAlert("\t|X| Topup saldo minimal Rp.100000 !");
+            goto epay;
         }
     } else if(mn=="2") {
         clear();

@@ -4,7 +4,7 @@ void detailApp() {
     out("\tlayanan lokal.");
     endln(1);
     out("\tTeam Pengembang : ");
-    out("\t1. Adit      : Project Documentation");
+    out("\t1. Adhit     : Project Documentation");
     out("\t2. Didik     : Programmer");
     out("\t3. Fauzan    : Data Engineer");
     out("\t4. Randa     : Software QA");
