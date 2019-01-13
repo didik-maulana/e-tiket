@@ -163,7 +163,7 @@ void showRiwayat() {
 
 void clear() {
 	msg="";
-	system("clear");
+	system("cls");
 }
 
 void msgAlert(string txt) {
